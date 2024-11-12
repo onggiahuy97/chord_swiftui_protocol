@@ -18,8 +18,10 @@ struct ContentView: View {
                 ScrollView {
                     Text(viewModel.nodeInfo ?? "")
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
                         .background(.white)
                         .font(.system(size: 18))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .frame(maxWidth: .infinity)
                 Spacer()
@@ -31,6 +33,21 @@ struct ContentView: View {
                         
                         Button("New Node") {
                             viewModel.newNode()
+                        }
+                        
+                        if let currentNode = viewModel.currentNode {
+                            Button("Remove node \(currentNode.id)") {
+                                viewModel.leaveChord(for: currentNode.id)
+                            }
+                        }
+                        Spacer()
+                    }
+                    
+                    HStack {
+                        TextField("Key", text: $viewModel.key)
+                        TextField("Value", text: $viewModel.value)
+                        Button("Insert") {
+                            viewModel.insertMessage()
                         }
                     }
                     

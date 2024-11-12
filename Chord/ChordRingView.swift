@@ -28,7 +28,7 @@ struct ChordRingView: View {
         VStack {
             Text("Chord P2P DTH Ring")
                 .font(.title)
-                .padding(.bottom, 20)
+                .padding(.bottom, 40)
             
             ZStack {
                 let center = CGPoint(x: viewModel.ringDiameter / 2, y: viewModel.ringDiameter / 2)
@@ -44,7 +44,7 @@ struct ChordRingView: View {
                 // Draw nodes
                 ForEach($viewModel.nodes) { $node in
                     NodeView(node: $node, nodeRadius: viewModel.nodeRadius)
-                        .foregroundStyle(node.color)
+                        .foregroundStyle(node.id == (viewModel.currentNode?.id ?? -1) ? Color.blue : node.color)
                         .onTapGesture {
                             viewModel.fetchNodeInfo(for: node.id)
                         }

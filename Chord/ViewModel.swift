@@ -28,6 +28,8 @@ class ViewModel: ObservableObject {
     @Published var nodes: [ChordNode] = []
     @Published var currentNode: ChordNode?
     @Published var nodeInfo: String?
+    @Published var key: String = ""
+    @Published var value: String = ""
 
     let nodeRadius: CGFloat = 18
     let ringDiameter: CGFloat = 300
@@ -54,6 +56,71 @@ class ViewModel: ObservableObject {
         DispatchQueue.main.async {
             self.nodes = tempNodes
         }
+        
+    }
+    
+    func leaveChord(for id: Int) {
+        guard let url = URL(string: "http://127.0.0.1:5000/leave/\(id)") else {
+            print("Invalid URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error fetching node info: \(error)")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.currentNode = nil
+                self.fetchNodes()
+            }
+        }.resume()
+    }
+    
+    func insertMessage() {
+        guard let url = URL(string: "http://127.0.0.1:5000/insert") else {
+            print("Invalid URL")
+            return
+        }
+        
+        guard !key.isEmpty && !value.isEmpty else {
+            print("key and value must not be empty")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload: [String: String] = [
+            "key": self.key,
+            "value": self.value
+        ]
+        do {
+            let json = try JSONSerialization.data(withJSONObject: payload)
+            request.httpBody = json
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error inserting message: \(error)")
+                    return
+                }
+                
+                guard let data = data else {
+                    print("No data received")
+                    return
+                }
+                
+            }.resume()
+        } catch {
+            print("Error creating JSON: \(error)")
+        }
+        
+        self.key.removeAll()
+        self.value.removeAll()
         
     }
     
@@ -147,6 +214,10 @@ class ViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.nodes = decodedResponse.nodes.map(\.id).map { ChordNode(id: $0) }
                     self.updateNodes()
+                    self.currentNode = self.nodes.sorted(by: { $0.id < $1.id}).first
+                    if let id = self.currentNode?.id {
+                        self.fetchNodeInfo(for: id)
+                    }
                 }
             } catch {
                 print("Error decoding nodes: \(error)")
