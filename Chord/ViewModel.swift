@@ -37,6 +37,8 @@ class ViewModel: ObservableObject {
     let nodeRadius: CGFloat = 18
     let ringDiameter: CGFloat = 300
     
+    let BASE_URL = "http://127.0.0.1:5000"
+    
     init() {
         self.fetchNodes()
     }
@@ -65,7 +67,7 @@ class ViewModel: ObservableObject {
 //    }
     
     func leaveChord(for id: Int) {
-        guard let url = URL(string: "http://127.0.0.1:5000/leave/\(id)") else {
+        guard let url = URL(string: "\(BASE_URL)/leave/\(id)") else {
             print("Invalid URL")
             return
         }
@@ -87,7 +89,7 @@ class ViewModel: ObservableObject {
     }
     
     func insertMessage() {
-        guard let url = URL(string: "http://127.0.0.1:5000/insert") else {
+        guard let url = URL(string: "\(BASE_URL)/insert") else {
             print("Invalid URL")
             return
         }
@@ -132,7 +134,7 @@ class ViewModel: ObservableObject {
     }
     
     func fetchNodeInfo(for id: Int) {
-        guard let url = URL(string: "http://127.0.0.1:5000/info/\(id)") else {
+        guard let url = URL(string: "\(BASE_URL)/info/\(id)") else {
             print("Invalid URL")
             return
         }
@@ -148,20 +150,34 @@ class ViewModel: ObservableObject {
                 return
             }
             
-            // Convert data to string to see raw JSON
-            if let jsonString = String(data: data, encoding: .utf8) {
+            if let json = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers),
+               let jsonData = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted) {
+                print(String(decoding: jsonData, as: UTF8.self))
                 DispatchQueue.main.async {
-                    self.nodeInfo = jsonString
+                    self.nodeInfo = String(decoding: jsonData, as: UTF8.self)
                     self.currentNode = self.nodes.first(where: { $0.id == id })
                 }
             } else {
-                print("Could not convert data to string")
+                print("json data malformed")
             }
+            
+            // Convert data to string to see raw JSON
+//            if let jsonString = String(data: data, encoding: .utf8) {
+//                
+//                
+//                
+//                DispatchQueue.main.async {
+//                    self.nodeInfo = jsonString
+//                    self.currentNode = self.nodes.first(where: { $0.id == id })
+//                }
+//            } else {
+//                print("Could not convert data to string")
+//            }
         }.resume()
     }
     
     func newNode() {
-        guard let url = URL(string: "http://127.0.0.1:5000/join") else {
+        guard let url = URL(string: "\(BASE_URL)/join") else {
             print("Invalid URL")
             return
         }
@@ -198,7 +214,7 @@ class ViewModel: ObservableObject {
     }
     
     func fetchNodes() {
-        guard let url = URL(string: "http://127.0.0.1:5000/nodes") else {
+        guard let url = URL(string: "\(BASE_URL)/nodes") else {
             print("Invalid URL")
             return
         }
