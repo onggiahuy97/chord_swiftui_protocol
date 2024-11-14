@@ -25,41 +25,42 @@ struct ChordRingView: View {
     @EnvironmentObject var viewModel: ViewModel
     
     var body: some View {
-        VStack {
-            Text("Chord P2P DTH Ring")
-                .font(.title)
-                .padding(.bottom, 40)
-            
-            ZStack {
-                let center = CGPoint(x: viewModel.ringDiameter / 2, y: viewModel.ringDiameter / 2)
-                
-                // Draw circular connections between sorted nodes
-                ForEach(0..<viewModel.nodes.count, id: \.self) { i in
-                    let fromNode = viewModel.nodes[i]
-                    let toNode = viewModel.nodes[(i + 1) % viewModel.nodes.count] // Wrap around to form a ring
-                    CurvedLine(from: fromNode.position, to: toNode.position, center: center)
-                        .stroke(Color.gray, lineWidth: 1)
-                }
-                
-                // Draw nodes
-                ForEach($viewModel.nodes) { $node in
-                    NodeView(node: $node, nodeRadius: viewModel.nodeRadius)
-                        .foregroundStyle(node.id == (viewModel.currentNode?.id ?? -1) ? Color.blue : node.color)
-                        .onTapGesture {
-                            viewModel.fetchNodeInfo(for: node.id)
-                        }
-                }
-                
-                // Labels for each node
-                ForEach(viewModel.nodes) { node in
-                    Text("P\(node.id)")
-                        .font(.system(size: 14, weight: .medium))
-                        .position(x: node.position.x, y: node.position.y - 25)
-                }
-            }
-            .frame(width: viewModel.ringDiameter + 50, height: viewModel.ringDiameter + 50)
-        }
-        .padding()
+        CircleWithNodes()
+//        VStack {
+//            Text("Chord P2P DTH Ring")
+//                .font(.title)
+//                .padding(.bottom, 40)
+//            
+//            ZStack {
+//                let center = CGPoint(x: viewModel.ringDiameter / 2, y: viewModel.ringDiameter / 2)
+//                
+//                // Draw circular connections between sorted nodes
+//                ForEach(0..<viewModel.nodes.count, id: \.self) { i in
+//                    let fromNode = viewModel.nodes[i]
+//                    let toNode = viewModel.nodes[(i + 1) % viewModel.nodes.count] // Wrap around to form a ring
+//                    CurvedLine(from: fromNode.position, to: toNode.position, center: center)
+//                        .stroke(Color.gray, lineWidth: 1)
+//                }
+//                
+//                // Draw nodes
+//                ForEach($viewModel.nodes) { $node in
+//                    NodeView(node: $node, nodeRadius: viewModel.nodeRadius)
+//                        .foregroundStyle(node.id == (viewModel.currentNode?.id ?? -1) ? Color.blue : node.color)
+//                        .onTapGesture {
+//                            viewModel.fetchNodeInfo(for: node.id)
+//                        }
+//                }
+//                
+//                // Labels for each node
+//                ForEach(viewModel.nodes) { node in
+//                    Text("P\(node.id)")
+//                        .font(.system(size: 14, weight: .medium))
+//                        .position(x: node.position.x, y: node.position.y - 25)
+//                }
+//            }
+//            .frame(width: viewModel.ringDiameter + 50, height: viewModel.ringDiameter + 50)
+//        }
+//        .padding()
     }
 }
 

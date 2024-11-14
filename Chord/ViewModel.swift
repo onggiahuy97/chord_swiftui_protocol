@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import SwiftyJSON
 
 // Node data structure
 struct ChordNode: Identifiable {
     let id: Int
+    let messagesCount: Int
     var color: Color = .gray
     var position: CGPoint = .zero
 }
@@ -18,6 +20,7 @@ struct ChordNode: Identifiable {
 struct Node: Decodable {
     let id: Int
     let successor: Int
+    let messagesCount: Int
 }
 
 struct NodesResponse: Decodable {
@@ -38,26 +41,28 @@ class ViewModel: ObservableObject {
         self.fetchNodes()
     }
     
-    func updateNodes() {
-        let ids = nodes.map(\.id).sorted()
-        var tempNodes: [ChordNode] = []
-        let angleIncrement = 2 * .pi / Double(ids.count)
-        let radius = ringDiameter / 2
-        // Initialize each node's position and color based on its index
-        for (index, id) in ids.enumerated() {
-            let angle = angleIncrement * Double(index)
-            let x = radius + cos(angle) * radius
-            let y = radius + sin(angle) * radius
-            let position = CGPoint(x: x, y: y)
-            let color = Color.gray
-            tempNodes.append(ChordNode(id: id, color: color, position: position))
-        }
-        
-        DispatchQueue.main.async {
-            self.nodes = tempNodes
-        }
-        
-    }
+//    func updateNodes() {
+//        let ids = nodes.map(\.id).sorted()
+//        var tempNodes: [ChordNode] = []
+//        let angleIncrement = 2 * .pi / Double(ids.count)
+//        let radius = ringDiameter / 2
+//        // Initialize each node's position and color based on its index
+//        for (index, id) in ids.enumerated() {
+//            let angle = angleIncrement * Double(index)
+//            let x = radius + cos(angle) * radius
+//            let y = radius + sin(angle) * radius
+//            let position = CGPoint(x: x, y: y)
+//            let color = Color.gray
+//            tempNodes.append(ChordNode(id: id, color: color, position: position))
+//        }
+//        
+//        DispatchQueue.main.async {
+//            withAnimation {
+//                self.nodes = tempNodes
+//            }
+//        }
+//        
+//    }
     
     func leaveChord(for id: Int) {
         guard let url = URL(string: "http://127.0.0.1:5000/leave/\(id)") else {
@@ -113,6 +118,8 @@ class ViewModel: ObservableObject {
                     print("No data received")
                     return
                 }
+                
+                self.fetchNodes()
                 
             }.resume()
         } catch {
@@ -212,8 +219,13 @@ class ViewModel: ObservableObject {
                 
                 // Update the nodes on the main thread
                 DispatchQueue.main.async {
-                    self.nodes = decodedResponse.nodes.map(\.id).map { ChordNode(id: $0) }
-                    self.updateNodes()
+                    withAnimation {
+                        self.nodes = decodedResponse.nodes.map(\.id).sorted().map { i in
+                            let index = decodedResponse.nodes.firstIndex(where: { $0.id == i})!
+                            return ChordNode(id: i, messagesCount: decodedResponse.nodes[index].messagesCount)
+                        }
+                    }
+//                    self.updateNodes()
                     self.currentNode = self.nodes.sorted(by: { $0.id < $1.id}).first
                     if let id = self.currentNode?.id {
                         self.fetchNodeInfo(for: id)
